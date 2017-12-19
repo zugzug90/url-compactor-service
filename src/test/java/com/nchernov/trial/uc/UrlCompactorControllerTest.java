@@ -3,6 +3,8 @@ package com.nchernov.trial.uc;
 import com.nchernov.trial.uc.rest.UrlCompactorController;
 import com.nchernov.trial.uc.rest.dto.CompactResultResponse;
 import com.nchernov.trial.uc.services.UrlCompactor;
+import com.nchernov.trial.uc.services.dao.UrlMappingDao;
+import com.nchernov.trial.uc.services.dao.UrlSummaryDao;
 import com.nchernov.trial.uc.services.impl.Base62UrlCompactor;
 import org.junit.Test;
 
@@ -16,7 +18,8 @@ import static org.mockito.Mockito.when;
 
 public class UrlCompactorControllerTest {
     private final UrlCompactor URL_COMPACTOR = new Base62UrlCompactor();
-    private UrlCompactorController urlCompactorController = new UrlCompactorController(URL_COMPACTOR);
+    private UrlCompactorController urlCompactorController = new UrlCompactorController(URL_COMPACTOR,
+            mock(UrlMappingDao.class));
     private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
     static {

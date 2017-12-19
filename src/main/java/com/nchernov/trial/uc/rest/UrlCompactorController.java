@@ -1,7 +1,9 @@
 package com.nchernov.trial.uc.rest;
 
+import com.nchernov.trial.uc.domain.UrlMapping;
 import com.nchernov.trial.uc.rest.dto.CompactResultResponse;
 import com.nchernov.trial.uc.services.UrlCompactor;
+import com.nchernov.trial.uc.services.dao.UrlMappingDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
@@ -19,10 +21,13 @@ import static org.springframework.util.StringUtils.isEmpty;
 @RequestMapping("/${rest.prefix}/urls")
 @ComponentScan("com.nchernov.trial.uc.services")
 public class UrlCompactorController {
-    UrlCompactor urlCompactor;
+    private UrlCompactor urlCompactor;
+    private UrlMappingDao urlMappingDao;
 
-    public UrlCompactorController(@Autowired UrlCompactor urlCompactor) {
+    public UrlCompactorController(@Autowired UrlCompactor urlCompactor,
+                                  @Autowired UrlMappingDao urlMappingDao) {
         this.urlCompactor = urlCompactor;
+        this.urlMappingDao = urlMappingDao;
     }
 
     @RequestMapping(path = "/compact", method= RequestMethod.POST)
