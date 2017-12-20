@@ -4,7 +4,7 @@ import com.nchernov.trial.uc.domain.UrlMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
- * Component for persisting url mappings in some storage
+ * DAO for persisting url mappings in some storage
  */
 public interface UrlMappingDao extends JpaRepository<UrlMapping, Long> {
 
