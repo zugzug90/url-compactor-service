@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
 
-public interface UrlSummaryDao  extends JpaRepository<UrlVisit, Long> {
+public interface UrlVisitDao extends JpaRepository<UrlVisit, Long> {
 
     String Q_GET_ALL_VISITS = "select uv from UrlVisit uv join uv.urlMapping";
 

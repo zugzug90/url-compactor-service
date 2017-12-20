@@ -15,8 +15,10 @@ public class UrlMapping {
     @Column(name="url")
     private String url;
 
-    @Column(name="pseudo_hash")
+    @Column(name="pseudo_hash", unique=true)
     private String pseudoHash;
+
+    private String shortLink;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "urlMapping")
     private List<UrlVisit> urlVisits = new LinkedList();
@@ -39,5 +41,13 @@ public class UrlMapping {
 
     public long getUrlMappingId() {
         return urlMappingId;
+    }
+
+    public String getShortLink() {
+        return shortLink;
+    }
+
+    public void setShortLink(String shortLink) {
+        this.shortLink = shortLink;
     }
 }

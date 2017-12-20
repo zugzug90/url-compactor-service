@@ -18,6 +18,14 @@ public class UrlVisit {
     @Column(name="visited_at")
     private Date visitedAt;
 
+    public UrlVisit() {
+    }
+
+    public UrlVisit(UrlMapping urlMapping, Date visitedAt) {
+        this.urlMapping = urlMapping;
+        this.visitedAt = visitedAt;
+    }
+
     public Date getVisitedAt() {
         return visitedAt;
     }

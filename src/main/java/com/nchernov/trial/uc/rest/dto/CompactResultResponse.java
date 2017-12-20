@@ -1,18 +1,18 @@
 package com.nchernov.trial.uc.rest.dto;
 
 public class CompactResultResponse extends DefaultResponse {
-    private String resultUrl;
+    private String shortLink;
 
     public CompactResultResponse(boolean success, String error) {
         super(success, error);
     }
 
-    public CompactResultResponse(String resultUrl) {
+    public CompactResultResponse(String shortLink) {
         super(true, null);
-        this.resultUrl = resultUrl;
+        this.shortLink = shortLink;
     }
 
-    public String getResultUrl() {
-        return resultUrl;
+    public String getShortLink() {
+        return shortLink;
     }
 }
