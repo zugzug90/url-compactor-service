@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+import static com.nchernov.trial.uc.util.UrlUtils.enrichWithShortLink;
+
 @Component
 public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
 
@@ -32,7 +34,7 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
     @Override
     public UrlMapping findByPseudoHash(String pseudoHash) {
         UrlMapping urlMapping = urlMappingDao.findByPseudoHash(pseudoHash);
-        enrichWithShortLink(urlMapping);
+        enrichWithShortLink(urlMapping, baseUrl, serverPort);
         return urlMapping;
     }
 
@@ -43,7 +45,7 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
         do {
             try {
                 UrlMapping urlMapping = urlMappingDao.save(new UrlMapping(url, pseudoHash));
-                enrichWithShortLink(urlMapping);
+                enrichWithShortLink(urlMapping, baseUrl, serverPort);
                 return urlMapping;
             } catch (DataIntegrityViolationException ex) {
                 //TODO: add logging here: failed to store pseudohash, found duplicate. Retry
@@ -53,9 +55,5 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
         } while (operationsCount > 0);
         //TODO: add logging here: failed to store pseudohash due to exceeded retry count limit
         throw new CreationException("Failed to create shortlink for url: " + url + ". Please, try again later.");
-    }
-
-    private void enrichWithShortLink(UrlMapping urlMapping) {
-        urlMapping.setShortLink(String.format("%s:%s/%s", baseUrl, serverPort, urlMapping.getPseudoHash()));
     }
 }

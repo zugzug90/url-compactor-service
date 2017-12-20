@@ -32,9 +32,7 @@ public class UrlCompactorControllerTest {
     static {
         when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
 
-        when(URL_MAPPING_DAO.save(any(UrlMapping.class))).thenCallRealMethod();
-        when(URL_MAPPING_DAO.findByPseudoHash(anyString())).thenCallRealMethod();
-        when(URL_MAPPING_DAO.existsByPseudoHash(anyString())).thenCallRealMethod();
+        configureMock(URL_MAPPING_DAO);
     }
 
 
@@ -102,5 +100,29 @@ public class UrlCompactorControllerTest {
         assertTrue(newResult.isSuccess());
 
         assertNotEquals(result.getShortLink(), newResult.getShortLink());
+    }
+
+    @Test
+    public void derivedFromExistingShortLink() throws Exception {
+        String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
+
+        UrlMappingDao urlMappingDao = mock(InMemoryMappingDao.class);
+        configureMock(urlMappingDao);
+
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao, URL_COMPACTOR);
+        UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
+        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+
+        result = urlCompactorController.compact(result.getShortLink(), httpServletRequest);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getError().startsWith("Provided URL is already a working short link for origin:"));
+        assertEquals(1, urlMappingDao.count());
+    }
+
+    private static void configureMock(UrlMappingDao urlMappingDao) {
+        when(urlMappingDao.save(any(UrlMapping.class))).thenCallRealMethod();
+        when(urlMappingDao.findByPseudoHash(anyString())).thenCallRealMethod();
+        when(urlMappingDao.existsByPseudoHash(anyString())).thenCallRealMethod();
+        when(urlMappingDao.count()).thenCallRealMethod();
     }
 }
