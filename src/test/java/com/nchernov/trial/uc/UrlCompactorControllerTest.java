@@ -7,6 +7,7 @@ import com.nchernov.trial.uc.rest.dto.CompactResultResponse;
 import com.nchernov.trial.uc.services.UrlCompactor;
 import com.nchernov.trial.uc.services.UrlMappingManager;
 import com.nchernov.trial.uc.services.dao.UrlMappingDao;
+import com.nchernov.trial.uc.services.dao.UrlVisitDao;
 import com.nchernov.trial.uc.services.impl.Base62UrlCompactor;
 import com.nchernov.trial.uc.services.impl.RetryIfDuplicateUrlMappingManager;
 import org.junit.Test;
@@ -24,14 +25,15 @@ import static org.mockito.Mockito.when;
 public class UrlCompactorControllerTest {
     private static final UrlCompactor URL_COMPACTOR = new Base62UrlCompactor();
     private static final UrlMappingDao URL_MAPPING_DAO = mock(InMemoryMappingDao.class);
-    private static final UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO, URL_COMPACTOR);
+    private static final UrlVisitDao URL_VISIT_DAO = mock(UrlVisitDao.class);
+    private static final UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
+            URL_VISIT_DAO, URL_COMPACTOR);
 
     private UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
     private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
     static {
         when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-
         configureMock(URL_MAPPING_DAO);
     }
 
@@ -72,7 +74,8 @@ public class UrlCompactorControllerTest {
 
     @Test(expected = CreationException.class)
     public void duplicatedShortLinkWithExceededRetries() throws Exception {
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO, (originalUrl, context) -> "IDDQD");
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
+                URL_VISIT_DAO, (originalUrl, context) -> "IDDQD");
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
         String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
@@ -89,7 +92,8 @@ public class UrlCompactorControllerTest {
         hashes.push("IDDQD");
         hashes.push("IDDQD");
 
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO, (originalUrl, context) -> hashes.pop());
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
+                URL_VISIT_DAO, (originalUrl, context) -> hashes.pop());
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
         String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
@@ -109,7 +113,8 @@ public class UrlCompactorControllerTest {
         UrlMappingDao urlMappingDao = mock(InMemoryMappingDao.class);
         configureMock(urlMappingDao);
 
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao, URL_COMPACTOR);
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao, URL_VISIT_DAO,
+                URL_COMPACTOR);
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
         CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
 
