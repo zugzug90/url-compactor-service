@@ -36,7 +36,7 @@ public class CacheConfiguration implements CachingConfigurer {
 
     @Override
     public CacheResolver cacheResolver() {
-        return new SimpleCacheResolver();
+        return null;
     }
 
     @Override
