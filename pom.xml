@@ -107,7 +107,6 @@
 		<id>debug</id>
 		<dependencies>
 			<!-- debugging -->
-			<!-- TODO: include this for separate profile, for example: dev -->
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-devtools</artifactId>

@@ -7,6 +7,8 @@ import com.nchernov.trial.uc.services.UrlCompactor;
 import com.nchernov.trial.uc.services.UrlMappingManager;
 import com.nchernov.trial.uc.services.dao.UrlMappingDao;
 import com.nchernov.trial.uc.services.dao.UrlVisitDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +25,7 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
     private @Value("${creation.retry.count}") int retryCount = 1;
     private @Value("${base.url}") String baseUrl = "http://localhost";
     private @Value("${server.port}") int serverPort = 9090;
+    private final Logger log = LoggerFactory.getLogger(RetryIfDuplicateUrlMappingManager.class);
 
     @Autowired
     private UrlMappingDao urlMappingDao;
@@ -64,12 +67,12 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
                 enrichWithShortLink(urlMapping, baseUrl, serverPort);
                 return urlMapping;
             } catch (DataIntegrityViolationException ex) {
-                //TODO: add logging here: failed to store pseudohash, found duplicate. Retry
+                log.error("Failed to store pseudohash, found duplicate. Retry");
                 pseudoHash = urlCompactor.compact(url, context);
                 operationsCount--;
             }
         } while (operationsCount > 0);
-        //TODO: add logging here: failed to store pseudohash due to exceeded retry count limit
+        log.error("failed to store pseudohash due to exceeded retry count limit");
         throw new CreationException("Failed to create shortlink for url: " + url + ". Please, try again later.");
     }
 
