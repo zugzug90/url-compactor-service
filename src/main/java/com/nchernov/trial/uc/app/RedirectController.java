@@ -11,10 +11,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.nchernov.trial.uc.app.ViewConstants.UC_VIEW_ERROR;
+
 @Controller
 public class RedirectController {
 
-    private @Autowired UrlMappingManager urlMappingManager;
+    private UrlMappingManager urlMappingManager;
+
+    public RedirectController(@Autowired UrlMappingManager urlMappingManager) {
+        this.urlMappingManager = urlMappingManager;
+    }
 
     @RequestMapping(value = "/{encodedUrl}", method = RequestMethod.GET)
     public void redirectToOrigin(HttpServletResponse httpServletResponse,
@@ -23,7 +29,7 @@ public class RedirectController {
         UrlMapping urlMapping = urlMappingManager.visit(pseudoHash);
         if (urlMapping == null) {
             httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            httpServletResponse.sendRedirect("error");
+            httpServletResponse.sendRedirect(UC_VIEW_ERROR);
             return;
         }
         httpServletResponse.sendRedirect(urlMapping.getUrl());

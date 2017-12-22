@@ -1,14 +1,9 @@
 package com.nchernov.trial.uc;
 
-import com.nchernov.trial.uc.domain.UrlMapping;
 import com.nchernov.trial.uc.exceptions.urlmapping.CreationException;
 import com.nchernov.trial.uc.rest.UrlCompactorController;
 import com.nchernov.trial.uc.rest.dto.CompactResultResponse;
-import com.nchernov.trial.uc.services.UrlCompactor;
 import com.nchernov.trial.uc.services.UrlMappingManager;
-import com.nchernov.trial.uc.services.dao.UrlMappingDao;
-import com.nchernov.trial.uc.services.dao.UrlVisitDao;
-import com.nchernov.trial.uc.services.impl.Base62UrlCompactor;
 import com.nchernov.trial.uc.services.impl.RetryIfDuplicateUrlMappingManager;
 import org.junit.Test;
 
@@ -17,33 +12,24 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Stack;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class UrlCompactorControllerTest {
-    private static final UrlCompactor URL_COMPACTOR = new Base62UrlCompactor();
-    private static final UrlMappingDao URL_MAPPING_DAO = mock(InMemoryMappingDao.class);
-    private static final UrlVisitDao URL_VISIT_DAO = mock(UrlVisitDao.class);
-    private static final UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
-            URL_VISIT_DAO, URL_COMPACTOR);
+public class UrlCompactorControllerTest extends BaseTest {
 
     private UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
-    private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
+    private final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-    static {
+    {
         when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        configureMock(URL_MAPPING_DAO);
     }
 
 
     @Test
     public void shortLink() throws Exception {
-        String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(result.isSuccess());
-        assertTrue(result.getShortLink().length() < origin.length());
+        assertTrue(result.getShortLink().length() < ORIGIN.length());
     }
 
     @Test
@@ -74,15 +60,14 @@ public class UrlCompactorControllerTest {
 
     @Test(expected = CreationException.class)
     public void duplicatedShortLinkWithExceededRetries() throws Exception {
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
-                URL_VISIT_DAO, (originalUrl, context) -> "IDDQD");
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao,
+                urlVisitDao, (originalUrl, context) -> "IDDQD");
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
-        String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(result.isSuccess());
 
-        urlCompactorController.compact(origin, httpServletRequest);
+        urlCompactorController.compact(ORIGIN, httpServletRequest);
     }
 
     @Test
@@ -92,15 +77,14 @@ public class UrlCompactorControllerTest {
         hashes.push("IDDQD");
         hashes.push("IDDQD");
 
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(URL_MAPPING_DAO,
-                URL_VISIT_DAO, (originalUrl, context) -> hashes.pop());
+        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao,
+                urlVisitDao, (originalUrl, context) -> hashes.pop());
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
-        String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(result.isSuccess());
 
-        CompactResultResponse newResult = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse newResult = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(newResult.isSuccess());
 
         assertNotEquals(result.getShortLink(), newResult.getShortLink());
@@ -108,26 +92,11 @@ public class UrlCompactorControllerTest {
 
     @Test
     public void derivedFromExistingShortLink() throws Exception {
-        String origin = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
-
-        UrlMappingDao urlMappingDao = mock(InMemoryMappingDao.class);
-        configureMock(urlMappingDao);
-
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao, URL_VISIT_DAO,
-                URL_COMPACTOR);
-        UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
 
         result = urlCompactorController.compact(result.getShortLink(), httpServletRequest);
         assertFalse(result.isSuccess());
         assertTrue(result.getError().startsWith("Provided URL is already a working short link for origin:"));
         assertEquals(1, urlMappingDao.count());
-    }
-
-    private static void configureMock(UrlMappingDao urlMappingDao) {
-        when(urlMappingDao.save(any(UrlMapping.class))).thenCallRealMethod();
-        when(urlMappingDao.findByPseudoHash(anyString())).thenCallRealMethod();
-        when(urlMappingDao.existsByPseudoHash(anyString())).thenCallRealMethod();
-        when(urlMappingDao.count()).thenCallRealMethod();
     }
 }
