@@ -67,7 +67,7 @@ public class UrlCompactorControllerTest extends BaseTest {
         CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(result.isSuccess());
 
-        urlCompactorController.compact(ORIGIN, httpServletRequest);
+        urlCompactorController.compact(ORIGIN + "/", httpServletRequest);
     }
 
     @Test
@@ -84,10 +84,20 @@ public class UrlCompactorControllerTest extends BaseTest {
         CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
         assertTrue(result.isSuccess());
 
-        CompactResultResponse newResult = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse newResult = urlCompactorController.compact(ORIGIN + "/", httpServletRequest);
         assertTrue(newResult.isSuccess());
 
         assertNotEquals(result.getShortLink(), newResult.getShortLink());
+    }
+
+    @Test
+    public void duplicatedOriginLink() throws Exception {
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse secondResult = urlCompactorController.compact(ORIGIN, httpServletRequest);
+
+        assertTrue(secondResult.isSuccess());
+        assertEquals(1, urlMappingDao.count());
+        assertEquals(result.getShortLink(), secondResult.getShortLink());
     }
 
     @Test

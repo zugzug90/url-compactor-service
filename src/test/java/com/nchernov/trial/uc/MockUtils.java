@@ -14,6 +14,7 @@ public class MockUtils {
         when(urlMappingDao.save(any(UrlMapping.class))).thenCallRealMethod();
         when(urlMappingDao.findByPseudoHash(anyString())).thenCallRealMethod();
         when(urlMappingDao.existsByPseudoHash(anyString())).thenCallRealMethod();
+        when(urlMappingDao.findByUrl(anyString())).thenCallRealMethod();
         when(urlMappingDao.count()).thenCallRealMethod();
     }
 }

@@ -52,6 +52,10 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
 
     @Override
     public UrlMapping create(String url, Map<String, Object> context) throws CreationException {
+        UrlMapping storedMapping = urlMappingDao.findByUrl(url);
+        if (storedMapping != null) {
+            return storedMapping;
+        }
         String pseudoHash = urlCompactor.compact(url, context);
         int operationsCount = retryCount + 1;
         do {

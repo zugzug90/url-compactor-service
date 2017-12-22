@@ -42,6 +42,16 @@ public abstract class InMemoryMappingDao implements UrlMappingDao  {
         return urlMapping;
     }
 
+    public UrlMapping findByUrl(String url) {
+        initDbIfNeeded();
+        for(UrlMapping urlMapping: db.values()) {
+            if (urlMapping.getUrl().equals(url)) {
+                return urlMapping;
+            }
+        }
+        return null;
+    }
+
     public long count() {
         initDbIfNeeded();
         return db.size();

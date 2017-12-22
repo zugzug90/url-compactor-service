@@ -13,4 +13,6 @@ public interface UrlMappingDao extends JpaRepository<UrlMapping, Long> {
     UrlMapping findByPseudoHash(String pseudoHash);
 
     boolean existsByPseudoHash(String pseudoHash);
+
+    UrlMapping findByUrl(String url);
 }
