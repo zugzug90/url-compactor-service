@@ -3,7 +3,7 @@ package com.nchernov.trial.uc.services.impl;
 import com.nchernov.trial.uc.domain.UrlMapping;
 import com.nchernov.trial.uc.domain.UrlVisit;
 import com.nchernov.trial.uc.exceptions.urlmapping.CreationException;
-import com.nchernov.trial.uc.services.UrlCompactor;
+import com.nchernov.trial.uc.services.HashGenerator;
 import com.nchernov.trial.uc.services.UrlMappingManager;
 import com.nchernov.trial.uc.services.dao.UrlMappingDao;
 import com.nchernov.trial.uc.services.dao.UrlVisitDao;
@@ -15,17 +15,16 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.Map;
 
 import static com.nchernov.trial.uc.util.UrlUtils.enrichWithShortLink;
 
 @Component
-public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
+public class RetryingUrlMappingManager implements UrlMappingManager {
 
     private @Value("${creation.retry.count}") int retryCount = 1;
     private @Value("${base.url}") String baseUrl = "http://localhost";
     private @Value("${server.port}") int serverPort = 9090;
-    private final Logger log = LoggerFactory.getLogger(RetryIfDuplicateUrlMappingManager.class);
+    private final Logger log = LoggerFactory.getLogger(RetryingUrlMappingManager.class);
 
     @Autowired
     private UrlMappingDao urlMappingDao;
@@ -34,14 +33,14 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
     private UrlVisitDao urlVisitDao;
 
     @Autowired
-    private UrlCompactor urlCompactor;
+    private HashGenerator hashGenerator;
 
-    public RetryIfDuplicateUrlMappingManager(UrlMappingDao urlMappingDao,
-                                             UrlVisitDao urlVisitDao,
-                                             UrlCompactor urlCompactor) {
+    public RetryingUrlMappingManager(UrlMappingDao urlMappingDao,
+                                     UrlVisitDao urlVisitDao,
+                                     HashGenerator hashGenerator) {
         this.urlMappingDao = urlMappingDao;
         this.urlVisitDao = urlVisitDao;
-        this.urlCompactor = urlCompactor;
+        this.hashGenerator = hashGenerator;
     }
 
     @Override
@@ -54,12 +53,12 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
     }
 
     @Override
-    public UrlMapping create(String url, Map<String, Object> context) throws CreationException {
+    public UrlMapping create(String url) throws CreationException {
         UrlMapping storedMapping = urlMappingDao.findByUrl(url);
         if (storedMapping != null) {
             return storedMapping;
         }
-        String pseudoHash = urlCompactor.compact(url, context);
+        String pseudoHash = hashGenerator.generateHash();
         int operationsCount = retryCount + 1;
         do {
             try {
@@ -68,7 +67,7 @@ public class RetryIfDuplicateUrlMappingManager implements UrlMappingManager {
                 return urlMapping;
             } catch (DataIntegrityViolationException ex) {
                 log.error("Failed to store pseudohash, found duplicate. Retry");
-                pseudoHash = urlCompactor.compact(url, context);
+                pseudoHash = hashGenerator.generateHash();
                 operationsCount--;
             }
         } while (operationsCount > 0);

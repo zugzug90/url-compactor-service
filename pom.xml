@@ -46,9 +46,9 @@
 
 		<!-- URL shortening logic -->
 		<dependency>
-			<groupId>io.seruco.encoding</groupId>
-			<artifactId>base62</artifactId>
-			<version>0.1.0</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.7</version>
 		</dependency>
 
 		<dependency>

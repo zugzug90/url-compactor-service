@@ -4,7 +4,7 @@ import com.nchernov.trial.uc.exceptions.urlmapping.CreationException;
 import com.nchernov.trial.uc.rest.UrlCompactorController;
 import com.nchernov.trial.uc.rest.dto.CompactResultResponse;
 import com.nchernov.trial.uc.services.UrlMappingManager;
-import com.nchernov.trial.uc.services.impl.RetryIfDuplicateUrlMappingManager;
+import com.nchernov.trial.uc.services.impl.RetryingUrlMappingManager;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ public class UrlCompactorControllerTest extends BaseTest {
 
     @Test
     public void shortLink() throws Exception {
-        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN);
         assertTrue(result.isSuccess());
         assertTrue(result.getShortLink().length() < ORIGIN.length());
     }
@@ -35,7 +35,7 @@ public class UrlCompactorControllerTest extends BaseTest {
     @Test
     public void emptyUrl() throws Exception {
         String origin = "";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(origin);
         assertFalse(result.isSuccess());
         //TODO: i18n this
         assertEquals("URL should not be empty", result.getError());
@@ -44,7 +44,7 @@ public class UrlCompactorControllerTest extends BaseTest {
     @Test
     public void mailtoUrl() throws Exception {
         String origin = "mailto:whoami@abcxyz.serious.business.com";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(origin);
         assertTrue(result.isSuccess());
         assertTrue(result.getShortLink().length() < origin.length());
     }
@@ -52,7 +52,7 @@ public class UrlCompactorControllerTest extends BaseTest {
     @Test
     public void invalidUrl() throws Exception {
         String origin = "It's a kind of magic";
-        CompactResultResponse result = urlCompactorController.compact(origin, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(origin);
         assertFalse(result.isSuccess());
         //TODO: i18n this
         assertEquals("Unsupported protocol", result.getError());
@@ -60,14 +60,14 @@ public class UrlCompactorControllerTest extends BaseTest {
 
     @Test(expected = CreationException.class)
     public void duplicatedShortLinkWithExceededRetries() throws Exception {
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao,
-                urlVisitDao, (originalUrl, context) -> "IDDQD");
+        UrlMappingManager urlMappingManager = new RetryingUrlMappingManager(urlMappingDao,
+                urlVisitDao, () -> "IDDQD");
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
-        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN);
         assertTrue(result.isSuccess());
 
-        urlCompactorController.compact(ORIGIN + "/", httpServletRequest);
+        urlCompactorController.compact(ORIGIN + "/");
     }
 
     @Test
@@ -77,14 +77,14 @@ public class UrlCompactorControllerTest extends BaseTest {
         hashes.push("IDDQD");
         hashes.push("IDDQD");
 
-        UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao,
-                urlVisitDao, (originalUrl, context) -> hashes.pop());
+        UrlMappingManager urlMappingManager = new RetryingUrlMappingManager(urlMappingDao,
+                urlVisitDao, () -> hashes.pop());
         UrlCompactorController urlCompactorController = new UrlCompactorController(urlMappingManager);
 
-        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN);
         assertTrue(result.isSuccess());
 
-        CompactResultResponse newResult = urlCompactorController.compact(ORIGIN + "/", httpServletRequest);
+        CompactResultResponse newResult = urlCompactorController.compact(ORIGIN + "/");
         assertTrue(newResult.isSuccess());
 
         assertNotEquals(result.getShortLink(), newResult.getShortLink());
@@ -92,8 +92,8 @@ public class UrlCompactorControllerTest extends BaseTest {
 
     @Test
     public void duplicatedOriginLink() throws Exception {
-        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
-        CompactResultResponse secondResult = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN);
+        CompactResultResponse secondResult = urlCompactorController.compact(ORIGIN);
 
         assertTrue(secondResult.isSuccess());
         assertEquals(1, urlMappingDao.count());
@@ -102,9 +102,9 @@ public class UrlCompactorControllerTest extends BaseTest {
 
     @Test
     public void derivedFromExistingShortLink() throws Exception {
-        CompactResultResponse result = urlCompactorController.compact(ORIGIN, httpServletRequest);
+        CompactResultResponse result = urlCompactorController.compact(ORIGIN);
 
-        result = urlCompactorController.compact(result.getShortLink(), httpServletRequest);
+        result = urlCompactorController.compact(result.getShortLink());
         assertFalse(result.isSuccess());
         assertTrue(result.getError().startsWith("Provided URL is already a working short link for origin:"));
         assertEquals(1, urlMappingDao.count());

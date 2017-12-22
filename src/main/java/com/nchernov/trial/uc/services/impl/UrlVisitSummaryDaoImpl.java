@@ -22,14 +22,12 @@ public class UrlVisitSummaryDaoImpl implements UrlVisitSummaryDao {
     private @Value("${base.url}") String baseUrl = "http://localhost";
     private @Value("${server.port}") int serverPort = 9090;
 
-    String Q_GET_TOP_N_VISITED = "select visit_count, url, pseudo_hash\n" +
-            "  FROM \n" +
-            "(select count(*) as visit_count, uv.url_mapping_url_mapping_id AS url_mapping_id, url, pseudo_hash \n" +
+    String Q_GET_TOP_N_VISITED = "select count(*) as visit_count, url, pseudo_hash\n" +
             "  FROM url_visit AS uv\n" +
             "    JOIN url_mapping\n" +
             "  ON uv.url_mapping_url_mapping_id = url_mapping.url_mapping_id\n" +
-            "  GROUP BY uv.url_mapping_url_mapping_id \n" +
-            "  ORDER BY 1 DESC LIMIT %d)";
+            "  GROUP BY uv.url_mapping_url_mapping_id\n" +
+            "  ORDER BY 1 DESC LIMIT %d";
 
     @Override
     public Collection<UrlVisitSummary> getTopVisitedUrls(int count) {

@@ -12,39 +12,25 @@ import java.util.Map;
  * Relies on in-memory structure: Map<>
  */
 public abstract class InMemoryMappingDao implements UrlMappingDao  {
-    private Map<String, UrlMapping> db;
 
     @Override
     public UrlMapping findByPseudoHash(String pseudoHash) {
-        initDbIfNeeded();
-        return db.get(pseudoHash);
+        return getDb().get(pseudoHash);
     }
 
-    private void initDbIfNeeded() {
-        if (db == null) {
-            db = new HashMap<>();
-        }
-    }
-
-    @Override
-    public boolean existsByPseudoHash(String pseudoHash) {
-        initDbIfNeeded();
-        return db.containsKey(pseudoHash);
-    }
+    abstract Map<String, UrlMapping> getDb();
 
     @Override
     public UrlMapping save(UrlMapping urlMapping) throws DataIntegrityViolationException {
-        initDbIfNeeded();
-        if (db.containsKey(urlMapping.getPseudoHash())) {
+        if (getDb().containsKey(urlMapping.getPseudoHash())) {
             throw new DataIntegrityViolationException("Such item already exists");
         }
-        db.put(urlMapping.getPseudoHash(), urlMapping);
+        getDb().put(urlMapping.getPseudoHash(), urlMapping);
         return urlMapping;
     }
 
     public UrlMapping findByUrl(String url) {
-        initDbIfNeeded();
-        for(UrlMapping urlMapping: db.values()) {
+        for(UrlMapping urlMapping: getDb().values()) {
             if (urlMapping.getUrl().equals(url)) {
                 return urlMapping;
             }
@@ -53,7 +39,6 @@ public abstract class InMemoryMappingDao implements UrlMappingDao  {
     }
 
     public long count() {
-        initDbIfNeeded();
-        return db.size();
+        return getDb().size();
     }
 }

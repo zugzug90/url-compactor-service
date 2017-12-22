@@ -1,26 +1,36 @@
 package com.nchernov.trial.uc;
 
-import com.nchernov.trial.uc.services.UrlCompactor;
+import com.nchernov.trial.uc.domain.UrlMapping;
+import com.nchernov.trial.uc.services.HashGenerator;
 import com.nchernov.trial.uc.services.UrlMappingManager;
-import com.nchernov.trial.uc.services.dao.UrlMappingDao;
 import com.nchernov.trial.uc.services.dao.UrlVisitDao;
-import com.nchernov.trial.uc.services.impl.Base62UrlCompactor;
-import com.nchernov.trial.uc.services.impl.RetryIfDuplicateUrlMappingManager;
+import com.nchernov.trial.uc.services.impl.AlphanumericHashGenerator;
+import com.nchernov.trial.uc.services.impl.RetryingUrlMappingManager;
 
-import static com.nchernov.trial.uc.MockUtils.configureMock;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BaseTest {
     protected static final String ORIGIN = "https://gist.github.com/subfuzion/08c5d85437d5d4f00e58";
     protected static final String PSEUDO_HASH = "JVCR";
 
-    protected final UrlCompactor urlCompactor = new Base62UrlCompactor();
-    protected final UrlMappingDao urlMappingDao = mock(InMemoryMappingDao.class);
+    protected final HashGenerator hashGenerator = new AlphanumericHashGenerator();
+    protected final InMemoryMappingDao urlMappingDao = mock(InMemoryMappingDao.class);
     protected final UrlVisitDao urlVisitDao = mock(UrlVisitDao.class);
-    protected final UrlMappingManager urlMappingManager = new RetryIfDuplicateUrlMappingManager(urlMappingDao,
-            urlVisitDao, urlCompactor);
+    protected final UrlMappingManager urlMappingManager = new RetryingUrlMappingManager(urlMappingDao,
+            urlVisitDao, hashGenerator);
+    private final Map<String, UrlMapping> db = new HashMap<>();
 
     {
-        configureMock(urlMappingDao);
+        when(urlMappingDao.save(any(UrlMapping.class))).thenCallRealMethod();
+        when(urlMappingDao.findByPseudoHash(anyString())).thenCallRealMethod();
+        when(urlMappingDao.findByUrl(anyString())).thenCallRealMethod();
+        when(urlMappingDao.count()).thenCallRealMethod();
+        when(urlMappingDao.getDb()).thenReturn(db);
     }
 }

@@ -31,17 +31,13 @@ public class UrlCompactorController {
     }
 
     @RequestMapping(path = "/compact", method= RequestMethod.POST)
-    public @ResponseBody CompactResultResponse compact(@RequestParam(value = "url") String url,
-                                  HttpServletRequest request) throws Exception {
-        Map<String, Object> context = new HashMap<>();
-        context.put("host", request.getRemoteAddr());
-
+    public @ResponseBody CompactResultResponse compact(@RequestParam(value = "url") String url) throws Exception {
         CompactResultResponse validationResult = validate(url);
         if (null != validationResult) {
             return validationResult;
         }
 
-        return new CompactResultResponse(urlMappingManager.create(url, context).getShortLink());
+        return new CompactResultResponse(urlMappingManager.create(url).getShortLink());
     }
 
     private CompactResultResponse validate(String url) {
