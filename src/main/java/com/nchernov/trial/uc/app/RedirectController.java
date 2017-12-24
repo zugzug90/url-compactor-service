@@ -16,9 +16,9 @@ import static com.nchernov.trial.uc.app.ViewConstants.UC_VIEW_ERROR;
 @Controller
 public class RedirectController {
 
-    private UrlMappingManager urlMappingManager;
+    private final UrlMappingManager urlMappingManager;
 
-    public RedirectController(@Autowired UrlMappingManager urlMappingManager) {
+    public RedirectController(UrlMappingManager urlMappingManager) {
         this.urlMappingManager = urlMappingManager;
     }
 

@@ -9,7 +9,6 @@ import com.nchernov.trial.uc.services.dao.UrlMappingDao;
 import com.nchernov.trial.uc.services.dao.UrlVisitDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -26,14 +25,11 @@ public class RetryingUrlMappingManager implements UrlMappingManager {
     private @Value("${server.port}") int serverPort = 9090;
     private final Logger log = LoggerFactory.getLogger(RetryingUrlMappingManager.class);
 
-    @Autowired
-    private UrlMappingDao urlMappingDao;
+    private final UrlMappingDao urlMappingDao;
 
-    @Autowired
-    private UrlVisitDao urlVisitDao;
+    private final UrlVisitDao urlVisitDao;
 
-    @Autowired
-    private HashGenerator hashGenerator;
+    private final HashGenerator hashGenerator;
 
     public RetryingUrlMappingManager(UrlMappingDao urlMappingDao,
                                      UrlVisitDao urlVisitDao,

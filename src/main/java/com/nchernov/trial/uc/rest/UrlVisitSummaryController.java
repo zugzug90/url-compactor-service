@@ -2,7 +2,6 @@ package com.nchernov.trial.uc.rest;
 
 import com.nchernov.trial.uc.domain.UrlVisitSummary;
 import com.nchernov.trial.uc.services.UrlVisitAnalyticsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
@@ -20,9 +19,9 @@ public class UrlVisitSummaryController {
 
     private @Value("${max.top.visited.count}") int maxTopVisited = 10;
 
-    private UrlVisitAnalyticsService urlVisitAnalyticsService;
+    private final UrlVisitAnalyticsService urlVisitAnalyticsService;
 
-    public UrlVisitSummaryController(@Autowired UrlVisitAnalyticsService urlVisitAnalyticsService) {
+    public UrlVisitSummaryController(UrlVisitAnalyticsService urlVisitAnalyticsService) {
         this.urlVisitAnalyticsService = urlVisitAnalyticsService;
     }
 

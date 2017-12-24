@@ -12,9 +12,9 @@ import java.util.Collection;
 @Component
 public class CachingUrlVisitAnalyticsService implements UrlVisitAnalyticsService {
 
-    private UrlVisitSummaryDao urlVisitSummaryDao;
+    private final UrlVisitSummaryDao urlVisitSummaryDao;
 
-    public CachingUrlVisitAnalyticsService(@Autowired UrlVisitSummaryDao urlVisitSummaryDao) {
+    public CachingUrlVisitAnalyticsService(UrlVisitSummaryDao urlVisitSummaryDao) {
         this.urlVisitSummaryDao = urlVisitSummaryDao;
     }
 

@@ -21,7 +21,7 @@ import static org.springframework.util.StringUtils.isEmpty;
 @RequestMapping("/${rest.prefix}/urls")
 @ComponentScan("com.nchernov.trial.uc.services")
 public class UrlCompactorController {
-    private UrlMappingManager urlMappingManager;
+    private final UrlMappingManager urlMappingManager;
 
     private @Value("${base.url}") String baseUrl = "http://localhost";
     private @Value("${server.port}") int serverPort = 9090;
